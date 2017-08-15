@@ -5,7 +5,6 @@
             [taoensso.timbre :as log]
             [status-im.data-store.messages :as msg-store]
             [status-im.utils.handlers :refer [register-handler-fx]]
-            [status-im.components.status :as status]
             [status-im.chat.constants :as const]
             [status-im.commands.utils :as commands-utils]
             [status-im.i18n :as i18n]
@@ -36,18 +35,6 @@
  ::update-persisted-message
  (fn [message]
    (msg-store/update message)))
-
-
-(reg-fx
- :chat-fx/call-jail
- (fn [{:keys [callback-events-creator] :as opts}]
-   (status/call-jail
-    (-> opts
-        (dissoc :callback-events-creator)
-        (assoc :callback
-               (fn [jail-response]
-                 (doseq [event (callback-events-creator jail-response)]
-                   (dispatch event))))))))
 
 ;;;; Handlers
 
@@ -85,13 +72,13 @@
                             data-type]
              to            (get-in contacts [chat-id :address])
              jail-params   {:parameters params
-                            :context (generate-context db chat-id to)}] 
-         {:chat-fx/call-jail {:jail-id jail-id
-                              :path path
-                              :params jail-params
-                              :callback-events-creator (fn [jail-response]
-                                                         [[::jail-command-data-response
-                                                           jail-response message data-type]])}})
+                            :context (generate-context db chat-id to)}]
+         {:call-jail {:jail-id jail-id
+                      :path path
+                      :params jail-params
+                      :callback-events-creator (fn [jail-response]
+                                                 [[::jail-command-data-response
+                                                   jail-response message data-type]])}})
        {:dispatch-n [[:add-commands-loading-callback jail-id
                       #(dispatch [:request-command-data message data-type])]
                      [:load-commands! jail-id]]}))))

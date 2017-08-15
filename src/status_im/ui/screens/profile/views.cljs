@@ -71,7 +71,7 @@
       [action-separator]
       [action-button (label :t/send-transaction)
        :arrow_right_blue
-       #(dispatch [:profile/send-transaction chat-id])]])])
+       #(dispatch [:profile/send-transaction chat-id whisper-identity])]])])
 
 (defn profile-info-item [{:keys [label value options text-mode empty-value?]}]
   [react/view styles/profile-setting-item
