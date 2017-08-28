@@ -22,13 +22,13 @@
                                                 :default false}
                           :network             :string}})
 
-(defn migration [old-realm new-realm]
+(defn migration [_old-realm new-realm]
   (log/debug "migrating account schema v3")
   ;; make sure that console chat has `:unremovable?` set to true
   (let [accounts (.objects new-realm "account")]
     (dotimes [i (.-length accounts)]
       (let [account (aget accounts i)
-            phrase      (aget account "signing-phrase")]
+            phrase  (aget account "signing-phrase")]
         (when (empty? phrase)
           (log/debug (js->clj account))
           (aset account "signing-phrase" (signing-phrase/generate)))))))
