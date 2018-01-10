@@ -12,11 +12,14 @@ sauce_username = environ.get('SAUCE_USERNAME')
 sauce_access_key = environ.get('SAUCE_ACCESS_KEY')
 
 
-def get_latest_apk():
+def get_latest_apk(pre_latest=False):
     raw_data = requests.request('GET', storage).text
     dates = re.findall("\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2}", raw_data)
     dates.sort(key=lambda date: datetime.strptime(date, "%d-%b-%Y %H:%M"), reverse=True)
-    return re.findall('>(.*k)</a>\s*%s' % dates[0], raw_data)[0]
+    if pre_latest:
+        return re.findall('>(.*k)</a>\s*%s' % dates[3], raw_data)[0]
+    else:
+        return re.findall('>(.*k)</a>\s*%s' % dates[0], raw_data)[0]
 
 
 latest_nightly_apk = dict()
@@ -77,4 +80,4 @@ def pytest_configure(config):
 
 
 def pytest_runtest_setup(item):
-    test_data.test_name = item.name + '_' + test_data.apk_name
+    test_data.test_name = item.name

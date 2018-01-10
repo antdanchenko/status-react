@@ -1,15 +1,18 @@
 import pytest
 import sys
-from tests import *
-from os import environ
-from appium import webdriver
-from abc import ABCMeta, \
-    abstractmethod
 import hmac
 import re
 import subprocess
+import matplotlib.pyplot as plt
+import time
+from tests import *
+from os import environ
+from appium import webdriver
+from abc import ABCMeta, abstractmethod
 from hashlib import md5
 from selenium.common.exceptions import WebDriverException
+from api_bindings.bitbar import BitBar
+from tests.conftest import get_latest_apk
 
 
 class AbstractTestCase:
@@ -164,6 +167,79 @@ class SingleDeviceTestCase(AbstractTestCase):
             self.driver.quit()
         except WebDriverException:
             pass
+
+
+class BitBarTestCase(AbstractTestCase):
+
+    @property
+    def bit_bar_api_key(self):
+        return environ.get('BIT_BAR_API_KEY')
+
+    def get_performance_diff(self, previous_build=None):
+        bit_bar = BitBar(self.bit_bar_api_key)
+        data = dict()
+        for name in test_data.apk_name, previous_build:
+            data[name] = dict()
+            data[name]['seconds'] = list()
+            data[name]['CPU'] = list()
+            data[name]['RAM'] = list()
+            build_data = bit_bar.get_performance_by(name, test_data.test_name)
+            for second, nothing in enumerate(build_data):
+                data[name]['seconds'].append(second)
+                data[name]['CPU'].append(nothing['cpuUsage'] * 100)
+                data[name]['RAM'].append(float(nothing['memUsage']) / 1000000)
+        plt.style.use('dark_background')
+        for i in 'CPU', 'RAM':
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+            ax.plot(data[test_data.apk_name]['seconds'], data[test_data.apk_name][i], 'o-', color='#40e0d0',
+                    label=test_data.apk_name)
+            ax.plot(data[previous_build]['seconds'], data[previous_build][i], 'o-', color='#ffa500',
+                    label=previous_build)
+            plt.title('diff(%s): ' % i + test_data.test_name)
+            plt.legend()
+            fig.savefig('%s_' % i
+                        + test_data.test_name + '.png')
+
+    @property
+    def capabilities_bitbar(self):
+        capabilities = dict()
+        capabilities['testdroid_apiKey'] = self.bit_bar_api_key
+        capabilities['testdroid_target'] = 'android'
+        capabilities['testdroid_device'] = 'LG Google Nexus 5X 6.0.1'
+        capabilities['testdroid_app'] = pytest.config.getoption('apk')
+        capabilities['testdroid_project'] = test_data.apk_name
+        capabilities['testdroid_testrun'] = test_data.test_name
+        capabilities['testdroid_findDevice'] = False
+        capabilities['testdroid_testTimeout'] = 600
+
+        capabilities['platformName'] = 'Android'
+        capabilities['deviceName'] = 'Android Phone'
+        capabilities['automationName'] = 'Appium'
+        capabilities['newCommandTimeout'] = 600
+        return capabilities
+
+    @property
+    def executor_bitbar(self):
+        return 'http://appium.testdroid.com/wd/hub'
+
+    def setup_method(self, method):
+        pass
+        self.driver = webdriver.Remote(self.executor_bitbar,
+                                       self.capabilities_bitbar)
+        self.driver.implicitly_wait(10)
+
+    def teardown_method(self, method):
+        try:
+            self.driver.quit()
+        except WebDriverException:
+            pass
+        finally:
+            for i in range(10):
+                try:
+                    self.get_performance_diff(get_latest_apk(pre_latest=True))
+                    return
+                except BitBar.ResponseError:
+                    time.sleep(30)
 
 
 environments = {'local': LocalMultipleDeviceTestCase,

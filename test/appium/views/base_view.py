@@ -53,13 +53,13 @@ class NoButton(BaseButton):
 class OkButton(BaseButton):
     def __init__(self, driver):
         super(OkButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='OK']")
+        self.locator = self.Locator.xpath_selector("//*[contains(@text, 'OK')]")
 
 
 class ContinueButtonAPK(BaseButton):
     def __init__(self, driver):
         super(ContinueButtonAPK, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Continue']")
+        self.locator = self.Locator.xpath_selector("//*[contains(@text, 'Continue')]")
 
 
 class ContactsButton(BaseButton):
