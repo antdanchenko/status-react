@@ -3,8 +3,6 @@ import sys
 import hmac
 import re
 import subprocess
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 import time
 from tests import *
 from os import environ
@@ -14,6 +12,9 @@ from hashlib import md5
 from selenium.common.exceptions import WebDriverException
 from api_bindings.bitbar import BitBar
 from tests.conftest import get_latest_apk
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 
 class AbstractTestCase:
