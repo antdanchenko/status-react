@@ -4,6 +4,7 @@ import hmac
 import re
 import subprocess
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import time
 from tests import *
 from os import environ
@@ -176,6 +177,7 @@ class BitBarTestCase(AbstractTestCase):
         return environ.get('BIT_BAR_API_KEY')
 
     def get_performance_diff(self, previous_build=None):
+        mpl.use('Agg')
         bit_bar = BitBar(self.bit_bar_api_key)
         data = dict()
         for name in test_data.apk_name, previous_build:
@@ -209,7 +211,7 @@ class BitBarTestCase(AbstractTestCase):
         capabilities['testdroid_app'] = pytest.config.getoption('apk')
         capabilities['testdroid_project'] = test_data.apk_name
         capabilities['testdroid_testrun'] = test_data.test_name
-        capabilities['testdroid_findDevice'] = False
+        capabilities['testdroid_findDevice'] = True
         capabilities['testdroid_testTimeout'] = 600
 
         capabilities['platformName'] = 'Android'
@@ -223,7 +225,6 @@ class BitBarTestCase(AbstractTestCase):
         return 'http://appium.testdroid.com/wd/hub'
 
     def setup_method(self, method):
-        pass
         self.driver = webdriver.Remote(self.executor_bitbar,
                                        self.capabilities_bitbar)
         self.driver.implicitly_wait(10)
@@ -242,7 +243,8 @@ class BitBarTestCase(AbstractTestCase):
                     time.sleep(30)
 
 
-environments = {'local': LocalMultipleDeviceTestCase,
+environments = {'bitbar': BitBarTestCase,
+                'local': LocalMultipleDeviceTestCase,
                 'sauce': SauceMultipleDeviceTestCase}
 
 

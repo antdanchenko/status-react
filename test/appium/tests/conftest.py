@@ -39,7 +39,7 @@ def pytest_addoption(parser):
     parser.addoption('--env',
                      action='store',
                      default='sauce',
-                     help='Specify environment: local/sauce')
+                     help='Specify environment: local, sauce or bitbar')
     parser.addoption('--log',
                      action='store',
                      default=False,
@@ -67,19 +67,16 @@ def pytest_configure(config):
                                        if '.apk' in i]])[0]
 
     if is_master(config) and config.getoption('env') == 'sauce':
-        try:
-            if not is_uploaded():
-                response = requests.get(config.getoption('apk'), stream=True)
-                response.raise_for_status()
-                file = BytesIO(response.content)
-                del response
-                requests.post('http://saucelabs.com/rest/v1/storage/'
-                              + sauce_username + '/' + test_data.apk_name + '?overwrite=true',
-                              auth=(sauce_username, sauce_access_key),
-                              data=file,
-                              headers={'Content-Type': 'application/octet-stream'})
-        except SauceException:
-            pass
+        if not is_uploaded():
+            response = requests.get(config.getoption('apk'), stream=True)
+            response.raise_for_status()
+            file = BytesIO(response.content)
+            del response
+            requests.post('http://saucelabs.com/rest/v1/storage/'
+                          + sauce_username + '/' + test_data.apk_name + '?overwrite=true',
+                          auth=(sauce_username, sauce_access_key),
+                          data=file,
+                          headers={'Content-Type': 'application/octet-stream'})
 
 
 def pytest_runtest_setup(item):
