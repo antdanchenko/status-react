@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from os import environ
 from io import BytesIO
-from sauceclient import SauceClient
+from sauceclient import SauceClient, SauceException
 
 storage = 'http://artifacts.status.im:8081/artifactory/nightlies-local/'
 
@@ -67,16 +67,19 @@ def pytest_configure(config):
                                        if '.apk' in i]])[0]
 
     if is_master(config) and config.getoption('env') == 'sauce':
-        if not is_uploaded():
-            response = requests.get(config.getoption('apk'), stream=True)
-            response.raise_for_status()
-            file = BytesIO(response.content)
-            del response
-            requests.post('http://saucelabs.com/rest/v1/storage/'
-                          + sauce_username + '/' + test_data.apk_name + '?overwrite=true',
-                          auth=(sauce_username, sauce_access_key),
-                          data=file,
-                          headers={'Content-Type': 'application/octet-stream'})
+        try:
+            if not is_uploaded():
+                response = requests.get(config.getoption('apk'), stream=True)
+                response.raise_for_status()
+                file = BytesIO(response.content)
+                del response
+                requests.post('http://saucelabs.com/rest/v1/storage/'
+                              + sauce_username + '/' + test_data.apk_name + '?overwrite=true',
+                              auth=(sauce_username, sauce_access_key),
+                              data=file,
+                              headers={'Content-Type': 'application/octet-stream'})
+        except SauceException:
+            pass
 
 
 def pytest_runtest_setup(item):
