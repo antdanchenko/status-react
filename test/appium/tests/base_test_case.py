@@ -178,7 +178,6 @@ class BitBarTestCase(AbstractTestCase):
         return environ.get('BIT_BAR_API_KEY')
 
     def get_performance_diff(self, previous_build=None):
-        mpl.use('Agg')
         bit_bar = BitBar(self.bit_bar_api_key)
         data = dict()
         for name in test_data.apk_name, previous_build:
@@ -186,22 +185,26 @@ class BitBarTestCase(AbstractTestCase):
             data[name]['seconds'] = list()
             data[name]['CPU'] = list()
             data[name]['RAM'] = list()
-            build_data = bit_bar.get_performance_by(name, test_data.test_name)
-            for second, nothing in enumerate(build_data):
-                data[name]['seconds'].append(second)
-                data[name]['CPU'].append(nothing['cpuUsage'] * 100)
-                data[name]['RAM'].append(float(nothing['memUsage']) / 1000000)
+            try:
+                build_data = bit_bar.get_performance_by(name, test_data.test_name)
+            except BitBar.NameNotFoundException:
+                build_data = None
+            if build_data:
+                for second, nothing in enumerate(build_data):
+                    data[name]['seconds'].append(second)
+                    data[name]['CPU'].append(nothing['cpuUsage'] * 100)
+                    data[name]['RAM'].append(float(nothing['memUsage']) / 1000000)
         plt.style.use('dark_background')
         for i in 'CPU', 'RAM':
             fig, ax = plt.subplots(nrows=1, ncols=1)
-            ax.plot(data[test_data.apk_name]['seconds'], data[test_data.apk_name][i], 'o-', color='#40e0d0',
-                    label=test_data.apk_name)
-            ax.plot(data[previous_build]['seconds'], data[previous_build][i], 'o-', color='#ffa500',
-                    label=previous_build)
+            ax.plot(data[test_data.apk_name]['seconds'],
+                    data[test_data.apk_name][i], 'o-', color='#40e0d0', label=test_data.apk_name)
+            if data[previous_build]:
+                ax.plot(data[previous_build]['seconds'],
+                        data[previous_build][i], 'o-', color='#ffa500', label=previous_build)
             plt.title('diff(%s): ' % i + test_data.test_name)
             plt.legend()
-            fig.savefig('%s_' % i
-                        + test_data.test_name + '.png')
+            fig.savefig('%s_' % i + test_data.test_name + '.png')
 
     @property
     def capabilities_bitbar(self):

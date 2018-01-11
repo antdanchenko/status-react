@@ -1,4 +1,5 @@
 import pytest
+import time
 from tests.base_test_case import BitBarTestCase
 from views.console_view import ConsoleView
 from tests import user_flow
@@ -27,3 +28,7 @@ class TestPerformance(BitBarTestCase):
                                  transaction_users_wallet['A_USER']['passphrase'],
                                  transaction_users_wallet['A_USER']['password'],
                                  transaction_users_wallet['A_USER']['username'])
+
+    def test_console_view(self):
+        ConsoleView(self.driver)
+        time.sleep(25)

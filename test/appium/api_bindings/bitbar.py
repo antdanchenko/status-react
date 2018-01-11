@@ -2,7 +2,7 @@ import base64
 import requests
 import time
 from datetime import datetime
-#import testdroid
+import testdroid
 
 
 class BitBar:
@@ -13,6 +13,10 @@ class BitBar:
             super(Exception, self).__init__("Request Error: code %s: %s" %
                                             (status_code, msg))
             self.status_code = status_code
+
+    class NameNotFoundException(Exception):
+        def __init__(self, name):
+            super(Exception, self).__init__("Name: '%s' is not found on BitBar" % name)
 
     def __init__(self, api_key):
         self.api_key = base64.b64encode(api_key.encode('utf-8') + ':'.encode('utf-8')).decode('utf-8')
@@ -32,17 +36,17 @@ class BitBar:
         return response.text
 
     def get_projects(self):
-        return self.get(url=self.url + '/projects')
+        return self.get(self.url + '/projects')
 
     def get_test_runs(self, project_id):
-        return self.get(url=self.url + '/projects/' + str(project_id) + '/runs')
+        return self.get(self.url + '/projects/' + str(project_id) + '/runs')
 
     def get_device_runs(self, project_id, test_run_id):
-        return self.get(url = self.url + '/projects/' + str(project_id) + '/runs/' + str(test_run_id) + '/device-runs')
+        return self.get(self.url + '/projects/' + str(project_id) + '/runs/' + str(test_run_id) + '/device-runs')
 
     def get_performance(self, project_id, test_run_id, device_run_id):
-        return self.get(url = self.url + '/projects/' + str(project_id) + '/runs/' + str(test_run_id) + '/device-runs/'
-                              + str(device_run_id) + '/performance')
+        return self.get(self.url + '/projects/' + str(project_id) + '/runs/' + str(test_run_id) + '/device-runs/'
+                        + str(device_run_id) + '/performance')
 
     def get_project_id_by(self, project_name):
         all_projects = self.get_projects()
@@ -61,16 +65,14 @@ class BitBar:
                 test_run = i
                 break
         else:
-            raise BaseException('Test run is not found by given name')
+            raise self.NameNotFoundException(test_run_name)
         return test_run['id']
 
     def get_performance_by(self, project_name, test_run_name):
         project_id = self.get_project_id_by(project_name)
         test_id = self.get_test_run_id_by(project_id, test_run_name)
-
         all_device_runs = self.get_device_runs(project_id, test_id)
         device_run = all_device_runs['data'][0]['id']
-
         return self.get_performance(project_id, test_id, device_run)
 
     def get_previous_project_name(self):
