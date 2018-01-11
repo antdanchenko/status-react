@@ -1,8 +1,5 @@
 import base64
 import requests
-import time
-from datetime import datetime
-import testdroid
 
 
 class BitBar:
