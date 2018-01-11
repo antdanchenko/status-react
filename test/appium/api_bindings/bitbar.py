@@ -72,3 +72,7 @@ class BitBar:
         device_run = all_device_runs['data'][0]['id']
 
         return self.get_performance(project_id, test_id, device_run)
+
+    def get_previous_project_name(self):
+        sorted_projects = sorted(self.get_projects()['data'], key=lambda k: k['createTime'], reverse=True)
+        return sorted_projects[1]['name']

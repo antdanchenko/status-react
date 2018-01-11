@@ -238,7 +238,7 @@ class BitBarTestCase(AbstractTestCase):
         finally:
             for i in range(10):
                 try:
-                    self.get_performance_diff(get_latest_apk(pre_latest=True))
+                    self.get_performance_diff(BitBar(self.bit_bar_api_key).get_previous_project_name())
                     return
                 except BitBar.ResponseError:
                     time.sleep(30)
