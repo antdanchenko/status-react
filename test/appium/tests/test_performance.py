@@ -29,6 +29,7 @@ class TestPerformance(BitBarTestCase):
                                  transaction_users_wallet['A_USER']['password'],
                                  transaction_users_wallet['A_USER']['username'])
 
+    @pytest.mark.performance
     def test_console_view(self):
         ConsoleView(self.driver)
         time.sleep(25)
